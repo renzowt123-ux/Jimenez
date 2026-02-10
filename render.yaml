@@ -2,9 +2,12 @@ services:
   - type: web
     name: pedido-api
     runtime: docker
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
 
 databases:
   - name: pedido-db
     databaseName: dbpedidos
-    user: postgres_user
+    user: pedido_user
     plan: free
