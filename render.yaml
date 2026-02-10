@@ -12,32 +12,11 @@ services:
     autoDeploy: true
     dockerfilePath: Dockerfile
     envVars:
-      # Variables individuales (para compatibilidad)
-      - key: DB_HOST
-        fromDatabase:
-          name: pedido-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: pedido-db
-          property: port
-      - key: DB_NAME
-        fromDatabase:
-          name: pedido-db
-          property: database
-      - key: DB_USER
-        fromDatabase:
-          name: pedido-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: pedido-db
-          property: password
-      # Variable URL directa (Render estándar)
+      # Variable URL única para conectar a la BD
       - key: DATABASE_URL
         fromDatabase:
           name: pedido-db
-          property: connectionString
+          property: internalDatabaseUrl
       - key: PORT
         value: 8080
       - key: SPRING_PROFILES_ACTIVE

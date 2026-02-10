@@ -13,54 +13,30 @@ public class DataSourceConfig {
     @Bean
     @Primary
     public DataSource dataSource() {
-        // Intentar leer DATABASE_URL (Render)
-        String dbUrl = System.getenv("DATABASE_URL");
-        String dbUser = System.getenv("DATABASE_USER");
-        String dbPassword = System.getenv("DATABASE_PASSWORD");
-        
-        // Si no hay DATABASE_URL, construir desde variables individuales
-        if (dbUrl == null || dbUrl.isEmpty()) {
-            String dbHost = System.getenv("DB_HOST");
-            String dbPort = System.getenv("DB_PORT");
-            String dbName = System.getenv("DB_NAME");
-            dbUser = System.getenv("DB_USER");
-            dbPassword = System.getenv("DB_PASSWORD");
-            
-            if (dbHost != null && !dbHost.isEmpty()) {
-                dbPort = (dbPort != null && !dbPort.isEmpty()) ? dbPort : "5432";
-                dbUrl = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName;
-            } else {
-                // Fallback local
-                dbUrl = "jdbc:postgresql://localhost:5432/dbpedidos";
-                dbUser = "postgres";
-                dbPassword = "postgres";
-            }
-        } else {
-            // Normalizar DATABASE_URL si es necesario
-            if (!dbUrl.startsWith("jdbc:")) {
-                dbUrl = "jdbc:" + dbUrl;
-            }
-        }
-        
-        System.out.println("========= DataSourceConfig Bean =========");
-        System.out.println("DATABASE_URL: " + (dbUrl != null ? "***" : "null"));
-        System.out.println("DATABASE_USER: " + dbUser);
-        System.out.println("=========================================");
-        
+
+        String databaseUrl = System.getenv("DATABASE_URL");
+
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(dbUrl);
-        if (dbUser != null && !dbUser.isEmpty()) {
-            config.setUsername(dbUser);
+
+        if (databaseUrl != null && !databaseUrl.isEmpty()) {
+            if (!databaseUrl.startsWith("jdbc:")) {
+                databaseUrl = "jdbc:" + databaseUrl;
+            }
+
+            System.out.println(">>> Using DATABASE_URL from Render");
+            config.setJdbcUrl(databaseUrl);
+
+        } else {
+            System.out.println(">>> Using LOCAL PostgreSQL");
+
+            config.setJdbcUrl("jdbc:postgresql://localhost:5432/dbpedidos");
+            config.setUsername("postgres");
+            config.setPassword("postgres");
         }
-        if (dbPassword != null && !dbPassword.isEmpty()) {
-            config.setPassword(dbPassword);
-        }
+
+        config.setDriverClassName("org.postgresql.Driver");
         config.setMaximumPoolSize(5);
-        config.setMinimumIdle(1);
-        config.setConnectionTimeout(30000);
-        config.setIdleTimeout(600000);
-        config.setMaxLifetime(1800000);
-        
+
         return new HikariDataSource(config);
     }
 }
