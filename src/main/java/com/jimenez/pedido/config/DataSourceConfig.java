@@ -13,12 +13,21 @@ public class DataSourceConfig implements EnvironmentPostProcessor {
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
         String dbUrl = environment.getProperty("spring.datasource.url");
+        String profile = environment.getProperty("spring.profiles.active");
         
-        System.out.println("DEBUG: Original DATABASE_URL: " + dbUrl);
+        System.out.println("========= DataSourceConfig =========");
+        System.out.println("Profile: " + profile);
+        System.out.println("DATABASE_URL: " + dbUrl);
+        System.out.println("====================================");
         
-        if (dbUrl == null || dbUrl.isEmpty() || dbUrl.contains("$")) {
-            System.out.println("DEBUG: Variable no resuelto, usando fallback");
-            // Fallback for local development
+        // Solo procesar en prod
+        if (!"prod".equals(profile)) {
+            return;
+        }
+        
+        // Si no hay URL o contiene variable sin resolver
+        if (dbUrl == null || dbUrl.isEmpty() || dbUrl.contains("${") || !dbUrl.startsWith("jdbc:")) {
+            System.out.println("FALLBACK: Usando fallback a localhost");
             Map<String, Object> props = new HashMap<>();
             props.put("spring.datasource.url", "jdbc:postgresql://localhost:5432/dbpedidos");
             environment.getPropertySources().addFirst(
@@ -27,8 +36,9 @@ public class DataSourceConfig implements EnvironmentPostProcessor {
             return;
         }
         
+        // Normalizar URL
         String normalizedUrl = normalizeUrl(dbUrl);
-        System.out.println("DEBUG: Normalized URL: " + normalizedUrl);
+        System.out.println("Normalized URL: " + normalizedUrl);
         
         if (!normalizedUrl.equals(dbUrl)) {
             Map<String, Object> props = new HashMap<>();
@@ -40,26 +50,26 @@ public class DataSourceConfig implements EnvironmentPostProcessor {
     }
 
     private String normalizeUrl(String url) {
-        // Si ya tiene jdbc:, no agregar más
-        if (url.startsWith("jdbc:")) {
+        // Si ya tiene jdbc:, verificar y ajustar si es necesario
+        if (url.startsWith("jdbc:postgresql://")) {
+            // Agregar puerto :5432 si falta
+            if (!url.matches(".*@[^/:]+:\\d+.*")) {
+                int atIndex = url.lastIndexOf('@');
+                int slashAfterHost = url.indexOf('/', atIndex);
+                
+                if (slashAfterHost > atIndex) {
+                    String beforeSlash = url.substring(0, slashAfterHost);
+                    String afterSlash = url.substring(slashAfterHost);
+                    url = beforeSlash + ":5432" + afterSlash;
+                }
+            }
             return url;
         }
         
-        // Agregar jdbc: si no está
+        // Si es postgresql:// sin jdbc:, agregar jdbc:
         if (url.startsWith("postgresql://")) {
             url = "jdbc:" + url;
-        }
-        
-        // Agregar puerto :5432 si falta
-        if (url.contains("@") && !url.matches(".*@[^/:]+:\\d+.*")) {
-            int atIndex = url.lastIndexOf('@');
-            int slashAfterHost = url.indexOf('/', atIndex);
-            
-            if (slashAfterHost > atIndex) {
-                String beforeSlash = url.substring(0, slashAfterHost);
-                String afterSlash = url.substring(slashAfterHost);
-                url = beforeSlash + ":5432" + afterSlash;
-            }
+            return normalizeUrl(url); // Recursivamente normalizador
         }
         
         return url;
