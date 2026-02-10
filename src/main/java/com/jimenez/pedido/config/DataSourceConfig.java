@@ -13,43 +13,39 @@ public class DataSourceConfig {
     @Bean
     @Primary
     public DataSource dataSource() {
+        // Intentar leer DATABASE_URL (Render)
         String dbUrl = System.getenv("DATABASE_URL");
         String dbUser = System.getenv("DATABASE_USER");
         String dbPassword = System.getenv("DATABASE_PASSWORD");
         
+        // Si no hay DATABASE_URL, construir desde variables individuales
+        if (dbUrl == null || dbUrl.isEmpty()) {
+            String dbHost = System.getenv("DB_HOST");
+            String dbPort = System.getenv("DB_PORT");
+            String dbName = System.getenv("DB_NAME");
+            dbUser = System.getenv("DB_USER");
+            dbPassword = System.getenv("DB_PASSWORD");
+            
+            if (dbHost != null && !dbHost.isEmpty()) {
+                dbPort = (dbPort != null && !dbPort.isEmpty()) ? dbPort : "5432";
+                dbUrl = "jdbc:postgresql://" + dbHost + ":" + dbPort + "/" + dbName;
+            } else {
+                // Fallback local
+                dbUrl = "jdbc:postgresql://localhost:5432/dbpedidos";
+                dbUser = "postgres";
+                dbPassword = "postgres";
+            }
+        } else {
+            // Normalizar DATABASE_URL si es necesario
+            if (!dbUrl.startsWith("jdbc:")) {
+                dbUrl = "jdbc:" + dbUrl;
+            }
+        }
+        
         System.out.println("========= DataSourceConfig Bean =========");
-        System.out.println("DATABASE_URL: " + dbUrl);
+        System.out.println("DATABASE_URL: " + (dbUrl != null ? "***" : "null"));
         System.out.println("DATABASE_USER: " + dbUser);
         System.out.println("=========================================");
-        
-        // Si no hay DATABASE_URL, usar fallback
-        if (dbUrl == null || dbUrl.isEmpty()) {
-            System.out.println("USANDO FALLBACK: jdbc:postgresql://localhost:5432/dbpedidos");
-            dbUrl = "jdbc:postgresql://localhost:5432/dbpedidos";
-            dbUser = "postgres";
-            dbPassword = "postgres";
-        } else {
-            // Normalizar la URL si es necesario
-            if (!dbUrl.startsWith("jdbc:")) {
-                if (dbUrl.startsWith("postgresql://")) {
-                    dbUrl = "jdbc:" + dbUrl;
-                }
-            }
-            
-            // Agregar puerto si falta
-            if (!dbUrl.matches(".*@[^/:]+:\\d+.*")) {
-                int atIndex = dbUrl.lastIndexOf('@');
-                int slashAfterHost = dbUrl.indexOf('/', atIndex);
-                
-                if (atIndex > 0 && slashAfterHost > atIndex) {
-                    String beforeSlash = dbUrl.substring(0, slashAfterHost);
-                    String afterSlash = dbUrl.substring(slashAfterHost);
-                    dbUrl = beforeSlash + ":5432" + afterSlash;
-                }
-            }
-            
-            System.out.println("URL normalizada: " + dbUrl);
-        }
         
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(dbUrl);
