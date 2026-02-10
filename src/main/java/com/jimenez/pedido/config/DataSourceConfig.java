@@ -23,6 +23,18 @@ public class DataSourceConfig {
                 databaseUrl = "jdbc:" + databaseUrl;
             }
 
+            // Agregar puerto 5432 si falta
+            if (databaseUrl.contains("@") && !databaseUrl.matches(".*@[^/:]+:\\d+.*")) {
+                int atIndex = databaseUrl.lastIndexOf('@');
+                int slashIndex = databaseUrl.indexOf('/', atIndex);
+                
+                if (slashIndex > atIndex) {
+                    String beforeSlash = databaseUrl.substring(0, slashIndex);
+                    String afterSlash = databaseUrl.substring(slashIndex);
+                    databaseUrl = beforeSlash + ":5432" + afterSlash;
+                }
+            }
+
             System.out.println(">>> Using DATABASE_URL from Render");
             config.setJdbcUrl(databaseUrl);
 
