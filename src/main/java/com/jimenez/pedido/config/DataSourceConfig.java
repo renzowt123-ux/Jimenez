@@ -14,11 +14,21 @@ public class DataSourceConfig implements EnvironmentPostProcessor {
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
         String dbUrl = environment.getProperty("spring.datasource.url");
         
+        System.out.println("DEBUG: Original DATABASE_URL: " + dbUrl);
+        
         if (dbUrl == null || dbUrl.isEmpty() || dbUrl.contains("$")) {
+            System.out.println("DEBUG: Variable no resuelto, usando fallback");
+            // Fallback for local development
+            Map<String, Object> props = new HashMap<>();
+            props.put("spring.datasource.url", "jdbc:postgresql://localhost:5432/dbpedidos");
+            environment.getPropertySources().addFirst(
+                new MapPropertySource("fallback-database-url", props)
+            );
             return;
         }
         
         String normalizedUrl = normalizeUrl(dbUrl);
+        System.out.println("DEBUG: Normalized URL: " + normalizedUrl);
         
         if (!normalizedUrl.equals(dbUrl)) {
             Map<String, Object> props = new HashMap<>();
@@ -30,11 +40,14 @@ public class DataSourceConfig implements EnvironmentPostProcessor {
     }
 
     private String normalizeUrl(String url) {
+        // Si ya tiene jdbc:, no agregar más
+        if (url.startsWith("jdbc:")) {
+            return url;
+        }
+        
         // Agregar jdbc: si no está
-        if (!url.startsWith("jdbc:")) {
-            if (url.startsWith("postgresql://")) {
-                url = "jdbc:" + url;
-            }
+        if (url.startsWith("postgresql://")) {
+            url = "jdbc:" + url;
         }
         
         // Agregar puerto :5432 si falta
@@ -52,3 +65,4 @@ public class DataSourceConfig implements EnvironmentPostProcessor {
         return url;
     }
 }
+
