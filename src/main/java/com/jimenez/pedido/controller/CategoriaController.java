@@ -1,8 +1,8 @@
 package com.jimenez.pedido.controller;
 
-import com.jimenez.pedido.dto.ProductoResponseDTO;
-import com.jimenez.pedido.entity.Producto;
-import com.jimenez.pedido.service.ProductoService;
+import com.jimenez.pedido.dto.CategoriaResponseDTO;
+import com.jimenez.pedido.entity.Categoria;
+import com.jimenez.pedido.service.CategoriaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,14 +11,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/productos")
-public class ProductoController {
+@RequestMapping("/api/categorias")
+public class CategoriaController {
     
     @Autowired
-    private ProductoService service;
+    private CategoriaService service;
     
     @GetMapping
-    public Page<ProductoResponseDTO> getAll(
+    public Page<CategoriaResponseDTO> getAll(
             @RequestParam(required = false) String search,
             @PageableDefault(size = 10, sort = "id") Pageable pageable
     ) {
@@ -26,18 +26,18 @@ public class ProductoController {
     }
     
     @GetMapping("/{id}")
-    public ProductoResponseDTO getById(@PathVariable String id) {
+    public CategoriaResponseDTO getById(@PathVariable String id) {
         return service.findById(id);
     }
     
     @PostMapping
-    public ResponseEntity<ProductoResponseDTO> create(@RequestBody Producto producto) {
-        return ResponseEntity.status(201).body(service.create(producto));
+    public ResponseEntity<CategoriaResponseDTO> create(@RequestBody Categoria categoria) {
+        return ResponseEntity.status(201).body(service.create(categoria));
     }
     
     @PutMapping("/{id}")
-    public ResponseEntity<ProductoResponseDTO> update(@PathVariable String id, @RequestBody Producto producto) {
-        return ResponseEntity.ok(service.update(id, producto));
+    public ResponseEntity<CategoriaResponseDTO> update(@PathVariable String id, @RequestBody Categoria categoria) {
+        return ResponseEntity.ok(service.update(id, categoria));
     }
     
     @DeleteMapping("/{id}")

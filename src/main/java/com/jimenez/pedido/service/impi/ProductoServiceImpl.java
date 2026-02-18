@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ProductoServiceImpi implements ProductoService {
+public class ProductoServiceImpl implements ProductoService {
     
     @Autowired
     private ProductoRepository repository;
@@ -69,4 +69,3 @@ public class ProductoServiceImpi implements ProductoService {
         repository.deleteById(id);
     }
 }
-
