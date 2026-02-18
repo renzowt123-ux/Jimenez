@@ -1,5 +1,8 @@
 package com.jimenez.pedido.entity;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
@@ -25,6 +28,8 @@ public class UsuarioEmpresarial implements UserDetails {
     private String razonSocial;
     
     @Column(nullable = false, length = 255)
+    @JsonAlias("password")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String passwordHash;
     
     @Column(nullable = false)
@@ -49,6 +54,7 @@ public class UsuarioEmpresarial implements UserDetails {
     }
     
     @Override
+    @JsonIgnore
     public String getPassword() {
         return passwordHash;
     }

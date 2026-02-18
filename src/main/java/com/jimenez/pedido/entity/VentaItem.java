@@ -13,14 +13,14 @@ public class VentaItem {
     @Column(length = 36)
     private String id;
     
-    @Column(length = 36, nullable = false)
+    @Column(name = "venta_id", length = 36, nullable = false)
     private String ventaId;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "venta_id", insertable = false, updatable = false)
     private Venta venta;
     
-    @Column(length = 36)
+    @Column(name = "producto_id", length = 36)
     private String productoId;
     
     @ManyToOne(fetch = FetchType.LAZY)

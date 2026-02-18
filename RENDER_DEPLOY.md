@@ -1,67 +1,32 @@
-# Instrucciones para desplegar en Render
+﻿# Deploy en Render (Docker)
 
-## 🚀 IMPORTANTE: Usar Blueprint
+## 1. Crear servicios con Blueprint
+1. En Render, elige `New -> Blueprint`.
+2. Selecciona el repo `renzowt123-ux/Jimenez`.
+3. Render creara:
+   - Database: `pedido-db`
+   - Web service: `pedido-api`
 
-### Pasos:
-1. Ve a **https://dashboard.render.com**
-2. Haz clic en **New** → **Blueprint**
-3. Selecciona tu repositorio: `renzowt123-ux/Jimenez`
-4. Haz clic en **Create from Blueprint**
+## 2. Variables necesarias
+El `render.yaml` ya configura:
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` (desde la DB de Render)
+- `SPRING_PROFILES_ACTIVE=prod`
+- `JWT_SECRET` (auto generado)
+- `JWT_EXPIRATION_MS=86400000`
 
-Render creará automáticamente:
-- PostgreSQL Database (`pedido-db`)
-- Web Service (`pedido-api`)
+No configures `PORT` manualmente. Render lo inyecta automaticamente.
 
----
+## 3. Verificar build y arranque
+En logs del servicio web debes ver:
+- `>>> Using DB_HOST/DB_PORT/DB_NAME variables`
+- `Started PedidoApplication`
 
-## ⚠️ PASO CRÍTICO: Configurar DATABASE_URL
+Si falla la conexion a base de datos, revisa que el web service y la DB esten en el mismo Blueprint/proyecto.
 
-Después que Render cree los servicios:
+## 4. Error comun con DATABASE_URL
+Ahora la app soporta estos formatos:
+- `postgres://...`
+- `postgresql://...`
+- `jdbc:postgresql://...`
 
-### 1. Copia la URL de la Base de Datos
-- Ve al servicio **pedido-db** (Database)
-- En **Connections**, busca **Internal Database URL**
-- Cópiala completa (debe incluir `postgresql://user:password@host:port/dbname`)
-
-**Ejemplo:**
-```
-postgresql://pedido_db_user:PASSWORD123@dpg-abc123:5432/pedido_db
-```
-
-### 2. Configura en el Web Service
-- Ve al servicio **pedido-api** (Web Service)
-- Ve a **Environment**
-- Agrega/actualiza la variable:
-  - **Key:** `DATABASE_URL`
-  - **Value:** Pega la URL completa que copiaste anteriormente
-
-### 3. Redeploy
-- En **pedido-api**, haz clic en **Manual Deploy** o **Redeploy**
-- Espera a que compile y deploy
-
----
-
-## ✅ Verificar que funciona
-
-Cuando veas en los logs:
-```
-Root WebApplicationContext: initialization completed in XXXX ms
-```
-
-Sin errores de conexión a BD = **¡Éxito!** 🎉
-
----
-
-## 🐛 Troubleshooting
-
-Si sale error `"Driver org.postgresql.Driver claims to not accept jdbcUrl"`:
-1. Verifica que DATABASE_URL incluya el **port** (5432)
-2. Verifica que la URL sea de tipo **Internal** (no external)
-3. Redeploy
-
----
-
-## 📝 URLs Importantes
-- Dashboard: https://dashboard.render.com
-- Docs: https://render.com/docs/databases
-
+No necesitas prefijo manual `jdbc:` en Render.

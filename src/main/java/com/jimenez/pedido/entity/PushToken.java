@@ -12,7 +12,7 @@ public class PushToken {
     @Column(length = 36)
     private String id;
     
-    @Column(nullable = false)
+    @Column(name = "usuario_id", nullable = false)
     private Integer usuarioId;
     
     @ManyToOne(fetch = FetchType.LAZY)

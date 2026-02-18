@@ -1,4 +1,4 @@
-databases:
+﻿databases:
   - name: pedido-db
     plan: free
     databaseName: pedido
@@ -12,7 +12,6 @@ services:
     autoDeploy: true
     dockerfilePath: Dockerfile
     envVars:
-      # Variables individuales (Render SÍ soporta esto con Docker)
       - key: DB_HOST
         fromDatabase:
           name: pedido-db
@@ -33,7 +32,9 @@ services:
         fromDatabase:
           name: pedido-db
           property: password
-      - key: PORT
-        value: 8080
       - key: SPRING_PROFILES_ACTIVE
         value: prod
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRATION_MS
+        value: "86400000"

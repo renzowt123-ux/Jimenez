@@ -1,14 +1,20 @@
-# Etapa 1: Compilar
+# Build stage
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
-COPY src src
-RUN mvn package -DskipTests -B
 
-# Etapa 2: Ejecutar
+COPY pom.xml ./
+RUN mvn -B dependency:go-offline
+
+COPY src ./src
+RUN mvn -B -DskipTests clean package
+
+# Runtime stage
 FROM eclipse-temurin:21-jre
 WORKDIR /app
+
 COPY --from=build /app/target/*.jar app.jar
+
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "app.jar"]
+ENV SPRING_PROFILES_ACTIVE=prod
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

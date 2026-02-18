@@ -5,11 +5,14 @@ import com.jimenez.pedido.dto.LoginRequestDTO;
 import com.jimenez.pedido.dto.RegisterRequestDTO;
 import com.jimenez.pedido.dto.UsuarioEmpresarialResponseDTO;
 import com.jimenez.pedido.entity.UsuarioEmpresarial;
+import com.jimenez.pedido.security.JwtService;
 import com.jimenez.pedido.service.UsuarioEmpresarialService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -20,6 +23,9 @@ public class AuthController {
     
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtService jwtService;
     
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
@@ -29,11 +35,17 @@ public class AuthController {
             if (!passwordEncoder.matches(loginRequest.getPassword(), usuario.getPassword())) {
                 return ResponseEntity.status(401).build();
             }
+
+            String token = jwtService.generateToken(
+                    usuario.getRuc(),
+                    Map.of("rol", usuario.getRol().name(), "id", usuario.getId())
+            );
             
             AuthResponseDTO response = AuthResponseDTO.builder()
                     .id(usuario.getId())
                     .ruc(usuario.getRuc())
                     .razonSocial(usuario.getRazonSocial())
+                    .token(token)
                     .rol(usuario.getRol().name())
                     .tokenType("Bearer")
                     .build();
@@ -55,11 +67,17 @@ public class AuthController {
             usuario.setEstado(true);
             
             UsuarioEmpresarialResponseDTO created = usuarioService.create(usuario);
+
+            String token = jwtService.generateToken(
+                    created.getRuc(),
+                    Map.of("rol", created.getRol(), "id", created.getId())
+            );
             
             AuthResponseDTO response = AuthResponseDTO.builder()
                     .id(created.getId())
                     .ruc(created.getRuc())
                     .razonSocial(created.getRazonSocial())
+                    .token(token)
                     .rol(created.getRol())
                     .tokenType("Bearer")
                     .build();

@@ -8,6 +8,7 @@ import com.jimenez.pedido.service.UsuarioEmpresarialService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,9 @@ public class UsuarioEmpresarialServiceImpl implements UsuarioEmpresarialService 
     
     @Autowired
     private UsuarioEmpresarialMapper mapper;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     
     @Override
     @Transactional(readOnly = true)
@@ -49,6 +53,13 @@ public class UsuarioEmpresarialServiceImpl implements UsuarioEmpresarialService 
     public UsuarioEmpresarialResponseDTO create(UsuarioEmpresarial usuario) {
         usuario.setId(null);
         usuario.setCreatedAt(System.currentTimeMillis());
+        usuario.setPasswordHash(normalizePassword(usuario.getPasswordHash()));
+        if (usuario.getEstado() == null) {
+            usuario.setEstado(true);
+        }
+        if (usuario.getRol() == null) {
+            usuario.setRol(UsuarioEmpresarial.RolEnum.EMPRESA);
+        }
         return mapper.toDTO(repository.save(usuario));
     }
     
@@ -59,6 +70,9 @@ public class UsuarioEmpresarialServiceImpl implements UsuarioEmpresarialService 
         existente.setRazonSocial(usuario.getRazonSocial());
         existente.setEstado(usuario.getEstado());
         existente.setRol(usuario.getRol());
+        if (usuario.getPasswordHash() != null && !usuario.getPasswordHash().isBlank()) {
+            existente.setPasswordHash(normalizePassword(usuario.getPasswordHash()));
+        }
         return mapper.toDTO(repository.save(existente));
     }
     
@@ -71,5 +85,15 @@ public class UsuarioEmpresarialServiceImpl implements UsuarioEmpresarialService 
     @Transactional(readOnly = true)
     public UsuarioEmpresarial findByRuc(String ruc) {
         return repository.findByRuc(ruc).orElseThrow();
+    }
+
+    private String normalizePassword(String rawOrHash) {
+        if (rawOrHash == null || rawOrHash.isBlank()) {
+            throw new IllegalArgumentException("Password es obligatorio");
+        }
+        if (rawOrHash.startsWith("$2a$") || rawOrHash.startsWith("$2b$") || rawOrHash.startsWith("$2y$")) {
+            return rawOrHash;
+        }
+        return passwordEncoder.encode(rawOrHash);
     }
 }
