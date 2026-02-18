@@ -1,4 +1,4 @@
-﻿package com.jimenez.pedido.config;
+package com.jimenez.pedido.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
